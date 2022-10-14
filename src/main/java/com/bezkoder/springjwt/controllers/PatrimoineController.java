@@ -1,8 +1,10 @@
 package com.bezkoder.springjwt.controllers;
 
 //import com.bezkoder.springjwt.models.Favoris;
+import com.bezkoder.springjwt.models.Historique;
 import com.bezkoder.springjwt.models.Patrimoine;
 import com.bezkoder.springjwt.models.User;
+import com.bezkoder.springjwt.repository.HistoriqueRepository;
 import com.bezkoder.springjwt.repository.PatrimoineRepository;
 import com.bezkoder.springjwt.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,8 @@ public class PatrimoineController {
     public PatrimoineRepository patrimoineRepository ;
     @Autowired
     public UserRepository userRepository;
+    @Autowired
+    public HistoriqueRepository historiqueRepository;
 
     @GetMapping("/all")
     public List<Patrimoine> allAccess(){
@@ -111,7 +115,7 @@ public class PatrimoineController {
             user.setTitre(tutorial.getTitre());
             user.setPrix(tutorial.getPrix());
             user.setDate(LocalDate.now());
-            user.setDescription(tutorial.getLieu());
+            user.setDescription(tutorial.getDescription());
             user.setLieu(tutorial.getLieu());
             return new ResponseEntity<>(patrimoineRepository.save(user), HttpStatus.OK);
         } else {
@@ -119,72 +123,33 @@ public class PatrimoineController {
         }
     }
 
-//    @PostMapping("/addOffres/{id_user}")
-//    public void addNewOffres(@RequestBody Patrimoine offre ,@PathVariable(name = "id_user")Long id_user){
-//        Optional<User> user = userRepository.findById(id_user);
-//        offre.setId_entrepreneur(user.get().getId());
-//        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("uuuu/MM/dd");
-//        LocalDate localDate = LocalDate.now();
-//        System.out.println(dtf.format(localDate));
-//        offre.setDate(localDate);
-//        offreRepository.save(offre);
-//        System.out.println(offre);
-//    }
-    @PostMapping("/addd")
-    public void addd(@PathVariable(name = "id_offre")Long id_offre,@PathVariable(name = "id_user")Long id_user) {
-        Optional<Patrimoine> offre = patrimoineRepository.findById(id_offre);
-        Optional<User> user = userRepository.findById(id_user);
-        List<User> candidat = offre.get().getCandidats();
-        candidat.add(user.get());
-        offre.get().setCandidats(candidat);
+    @PostMapping("/demande")
+    public ResponseEntity<Historique> Demande(@RequestBody Historique historique) {
+        try {
 
-        /*List<Long> Mescandidature = user.get().getMesCandidature();
-        Mescandidature.add(offre.get());
-        user.get().setMesCandidature(Mescandidature);
-        userRepository.save(user.get());*/
-        patrimoineRepository.save(offre.get());
-        System.out.println("done");
-
+            Historique historique1 = historiqueRepository
+                    .save(new Historique(historique.getUsername(),LocalDate.now(), historique.getTitre(),"waiting"));
+            return new ResponseEntity<>(historique1, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-    @GetMapping("/OffreById/{id_offre}")
-    public Patrimoine OffreById(@PathVariable(name = "id_offre")Long id_offre) {
-        Optional<Patrimoine> offre = patrimoineRepository.findById(id_offre);
-        return offre.get();
+    @GetMapping("/alldemandes")
+    public List<Historique> allAccesss(){
+        return historiqueRepository.findAll();
     }
-//    @GetMapping("/OffresById_entrepreneur/{id_offre}")
-//    public Stream<Patrimoine> OffresById_entrepreneur(@PathVariable(name = "id_offre")Long id_offre) {
-//        Stream<Patrimoine> offre = patrimoineRepository.findById_entrepreneur(id_offre);
-//        return offre;
-//    }
-
-//    @PostMapping("/OffreFavorisByArray")
-//    public Stream<Offre> OffreFavorisByArray(@RequestBody Favoris favoris) {
-//
-//        Stream<Offre> offres = offreRepository.findAll()
-//                .stream()
-//                .filter(offre -> favoris.getids().contains(offre.getId()));
-//       return offres;
-//    }
-
-//    @GetMapping("/Candidats/{id_offre}")
-//    public List<User> Candidats(@PathVariable(name = "id_offre")Long id_offre) {
-//        List<User> users = userRepository.findAll();
-//        List<User> u = userRepository.findAll();
-//        u.clear();
-//        for (User element : users){
-//            for (Patrimoine el : element.getMesCandidature()) {
-//                if (el.getId()==id_offre){
-//                    System.out.println("existtt");
-//                    u.add(element);
-//                }
-//            }
-//        }
-//
-//        return u;
-//    }
-
-
-
+    @PutMapping("/demande/{id}")
+    public ResponseEntity<Historique> Demande(@PathVariable("id") long id,@RequestBody Historique historique) {
+        try {
+            Optional<Historique> historique2=historiqueRepository.findById(id);
+            Historique historique1 = historique2.get();
+            historique1.setStatus(historique.getStatus());
+            historiqueRepository.save(historique1);
+            return new ResponseEntity<>(historique1, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 
 }
